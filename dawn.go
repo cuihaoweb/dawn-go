@@ -1,6 +1,6 @@
 package dawn
 
-import "github.com/cuihaoweb/dawn/src/route"
+import "github.com/cuihaoweb/dawn/route"
 
 // NewRoute 创建创建路由对象
 func NewRoute() *route.Route {

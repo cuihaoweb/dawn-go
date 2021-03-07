@@ -1,9 +1,10 @@
 package utils
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/cuihaoweb/dawn/src/utils"
+	"github.com/cuihaoweb/dawn/utils"
 )
 
 func TestIsRegularURL(t *testing.T) {
@@ -23,9 +24,18 @@ func TestSplitURL(t *testing.T) {
 }
 
 func TestSubstr(t *testing.T) {
-	d1 := utils.Substr("cuihao", 1, -1)
+	d1 := utils.SubStr("cuihao", 1, -1)
 
 	if d1 != "uihao" {
 		t.Error(d1)
 	}
+}
+func TestGetU(t *testing.T) {
+	res, exp := utils.GetU("/book/:id/:name")
+	fmt.Println(res, exp)
+}
+
+func TestFindU(t *testing.T) {
+	res := utils.FindU("/hello/:id/:name", "/hello/1/李白")
+	fmt.Println(res)
 }

@@ -1,7 +1,9 @@
 package route
 
 import (
-	"github.com/cuihaoweb/dawn/src/utils"
+	"fmt"
+
+	"github.com/cuihaoweb/dawn/utils"
 )
 
 // DataStructure 数据结构
@@ -29,7 +31,9 @@ func (d *DataStructure) Match(url string) handler {
 	if utils.IsRegularURL(url) {
 		// 到正则路由中匹配
 		for _, val := range d.RegularURL {
-			if val.URL == url {
+			params := utils.FindU(val.URL, url)
+			if params != nil {
+				fmt.Println(params)
 				return val.Handler
 			}
 		}
