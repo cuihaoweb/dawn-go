@@ -1,13 +1,25 @@
 package dawn
 
-import "github.com/cuihaoweb/dawn/route"
+import (
+	"github.com/cuihaoweb/dawn/ctx"
+	"github.com/cuihaoweb/dawn/route"
+	"github.com/valyala/fasthttp"
+)
 
 // NewRoute 创建创建路由对象
 func NewRoute() *route.Route {
-	return &route.Route{
-		GetContainer:    route.NewDataStructure(),
-		PostContainer:   route.NewDataStructure(),
-		DeleteContainer: route.NewDataStructure(),
-		PutContainer:    route.NewDataStructure(),
-	}
+	return route.NewRoute()
+}
+
+// Listen 监听服务
+func Listen(addr string, router *route.Route) {
+	fasthttp.ListenAndServe(addr, func(rw *fasthttp.RequestCtx) {
+		c := ctx.NewCtx(rw)
+		handlerFunc := router.Match(string(c.Path()), c)
+		if handlerFunc == nil {
+			c.WriteString("NOT FOUND")
+			return
+		}
+		handlerFunc(c)
+	})
 }

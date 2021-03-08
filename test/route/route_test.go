@@ -5,19 +5,19 @@ import (
 	"testing"
 
 	"github.com/cuihaoweb/dawn"
-	"github.com/valyala/fasthttp"
+	"github.com/cuihaoweb/dawn/ctx"
 )
 
 func TestGet(t *testing.T) {
-	route := dawn.NewRoute().Get("/hello/book", func(ctx *fasthttp.RequestCtx) {
+	dawn.NewRoute().Get("/hello/book", func(ctx *ctx.Ctx) {
 		ctx.Path()
 		fmt.Println("匹配成功")
-	}).Get("/hello/id", func(ctx *fasthttp.RequestCtx) {
+	}).Get("/hello/id", func(ctx *ctx.Ctx) {
 		ctx.Path()
-	}).Post("/hello/:id", func(ctx *fasthttp.RequestCtx) {
+	}).Post("/hello/:id", func(ctx *ctx.Ctx) {
 		ctx.Path()
-	}).Post("/hello/id", func(ctx *fasthttp.RequestCtx) {
+	}).Post("/hello/id", func(ctx *ctx.Ctx) {
 		ctx.Path()
 	})
-	route.GetContainer.Match("/hello/book")(&fasthttp.RequestCtx{})
+	// route.GetContainer.Match("/hello/book")(&fasthttp.RequestCtx{})
 }

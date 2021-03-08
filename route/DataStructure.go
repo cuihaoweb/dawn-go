@@ -3,6 +3,7 @@ package route
 import (
 	"fmt"
 
+	"github.com/cuihaoweb/dawn/ctx"
 	"github.com/cuihaoweb/dawn/utils"
 )
 
@@ -27,7 +28,7 @@ func (d *DataStructure) Add(url string, handle handler) {
 }
 
 // Match xx
-func (d *DataStructure) Match(url string) handler {
+func (d *DataStructure) Match(url string, ctx *ctx.Ctx) handler {
 	if utils.IsRegularURL(url) {
 		// 到正则路由中匹配
 		for _, val := range d.RegularURL {

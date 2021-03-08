@@ -1,13 +1,11 @@
-package test
+package main
 
 import (
-	"testing"
-
 	"github.com/cuihaoweb/dawn"
 	"github.com/cuihaoweb/dawn/ctx"
 )
 
-func TestMain(t *testing.T) {
+func main() {
 	route := dawn.NewRoute()
 
 	route.RouteGroup("/book")
