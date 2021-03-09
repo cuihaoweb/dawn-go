@@ -1,25 +1,112 @@
 package dawn
 
 import (
+	"errors"
+
 	"github.com/cuihaoweb/dawn/ctx"
 	"github.com/cuihaoweb/dawn/route"
+	"github.com/cuihaoweb/dawn/types"
+	"github.com/cuihaoweb/dawn/utils"
 	"github.com/valyala/fasthttp"
 )
 
-// NewRoute 创建创建路由对象
-func NewRoute() *route.Route {
-	return route.NewRoute()
+// Dawn 入口程序
+type Dawn struct {
+	route *route.Route
+}
+
+// Router xx
+func (d *Dawn) Router() *route.Route {
+	return d.route
+}
+
+// match 匹配路由
+func (d *Dawn) match(path string, method string, ctx *ctx.Ctx) (types.Handler, map[string]interface{}) {
+	// 匹配路由
+	var handlerFunc types.Handler
+	var query map[string]interface{}
+	if handlerFunc = d.route.MatchExactURL(path, method); handlerFunc == nil {
+		if handlerFunc, query = d.route.MatchRegURL(path, method); handlerFunc == nil {
+			ctx.WriteString("NOT FOUND")
+			return nil, nil
+		}
+	}
+
+	return handlerFunc, query
+}
+
+func (d *Dawn) emitAnyUse(ctx *ctx.Ctx) error {
+	anyHandlerFunc := d.route.Middleware.GetAnyHandler()
+	for index, val := range anyHandlerFunc {
+		val(ctx, func() { d.route.Middleware.ReduceAnyUse() })
+
+		if d.route.Middleware.GetAnyCount()+index+1 != len(anyHandlerFunc) {
+			d.route.Middleware.GoAnyUse()
+			return errors.New("")
+		}
+
+		if d.route.Middleware.GetAnyCount() <= 0 {
+			d.route.Middleware.GoAnyUse()
+		}
+	}
+
+	return nil
+}
+
+func (d *Dawn) emitGroupUse(rootURL string, ctx *ctx.Ctx) error {
+	var groupHandlerFunc []types.UseHandler
+
+	if groupHandlerFunc = d.route.Middleware.GetGroupHandler(rootURL); groupHandlerFunc == nil {
+		return nil
+	}
+
+	for index, val := range groupHandlerFunc {
+		val(ctx, func() { d.route.Middleware.ReduceGroupUse(rootURL) })
+
+		if d.route.Middleware.GetGroupCount(rootURL)+index+1 != len(groupHandlerFunc) {
+			d.route.Middleware.GoGroupUse(rootURL)
+			return errors.New("")
+		}
+
+		if d.route.Middleware.GetGroupCount(rootURL) <= 0 {
+			d.route.Middleware.GoGroupUse(rootURL)
+		}
+	}
+	return nil
+}
+
+// New 创建创建路由对象
+func New() *Dawn {
+	Route := route.NewRoute()
+	return &Dawn{route: Route}
 }
 
 // Listen 监听服务
-func Listen(addr string, router *route.Route) {
+func Listen(addr string, app *Dawn) {
 	fasthttp.ListenAndServe(addr, func(rw *fasthttp.RequestCtx) {
 		c := ctx.NewCtx(rw)
-		handlerFunc := router.Match(string(c.Path()), c)
-		if handlerFunc == nil {
+		path := string(c.Path())
+		method := string(c.Method())
+		rootURL := utils.SplitRootURL(path)
+
+		// 匹配路由
+		var handlerFunc types.Handler
+		var query map[string]interface{}
+		if handlerFunc, query = app.match(path, method, c); handlerFunc == nil {
 			c.WriteString("NOT FOUND")
 			return
 		}
+
+		println("query", query)
+		// 执行中间件
+		if err := app.emitAnyUse(c); err != nil {
+			return
+		}
+
+		if err := app.emitGroupUse(rootURL, c); err != nil {
+			return
+		}
+
 		handlerFunc(c)
 	})
 }

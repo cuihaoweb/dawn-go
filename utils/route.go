@@ -15,29 +15,38 @@ func IsRegularURL(str string) bool {
 	return false
 }
 
-// SplitURL 判断是否是正则路由
-func SplitURL(str string) (string, string) {
+// SplitRootURL 拆分前缀路由
+func SplitRootURL(str string) string {
 	var rootURL []byte
-	var endURL string
 	var i int
 
 	if str == "" || str == "/" || str == "*" {
-		return str, ""
+		return str
 	}
 
 	for i = 0; i < len(str); i++ {
 		if i == 0 {
+			rootURL = append(rootURL, '/')
 			continue
 		}
+
 		if str[i] != '/' {
 			rootURL = append(rootURL, str[i])
 		} else {
 			break
 		}
 	}
-	endURL = SubStr(str, i, -1)
 
-	return string(rootURL), string(endURL)
+	return string(rootURL)
+}
+
+// SplitEndURL 拆分结束路由
+func SplitEndURL(str string) string {
+	if str == "" || str == "/" || str == "*" {
+		return str
+	}
+
+	return SubStr(str, len(SplitRootURL(str)), -1)
 }
 
 // SubStr 字符串截取
@@ -86,6 +95,9 @@ func FindU(route string, url string) map[string]interface{} {
 	var data = make(map[string]interface{})
 	var reg = regexp.MustCompile(exp)
 	res := reg.FindStringSubmatch(url)
+	if len(res) != len(arr)+1 {
+		return nil
+	}
 
 	for index, val := range arr {
 		data[val] = res[index+1]

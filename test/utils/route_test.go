@@ -14,12 +14,20 @@ func TestIsRegularURL(t *testing.T) {
 		t.Error(d1, d2)
 	}
 }
-func TestSplitURL(t *testing.T) {
-	d1, d11 := utils.SplitURL("/")
-	d2, d22 := utils.SplitURL("/user/add")
+func TestSplitRootURL(t *testing.T) {
+	d1 := utils.SplitRootURL("/")
+	d2 := utils.SplitRootURL("/user/add")
 
-	if d1 != "/" && d11 != "" && d2 != "book" && d22 != "add" {
-		t.Error(d1, d11, d2, d22)
+	if d1 != "/" || d2 != "/user" {
+		t.Error(d1, d2)
+	}
+}
+func TestSplitEndURL(t *testing.T) {
+	d1 := utils.SplitEndURL("/")
+	d2 := utils.SplitEndURL("/user/add")
+
+	if d1 != "/" || d2 != "/add" {
+		t.Error(d1, d2)
 	}
 }
 
