@@ -37,16 +37,12 @@ func (d *Dawn) match(path string, method string, ctx *ctx.Ctx) (types.Handler, m
 
 func (d *Dawn) emitAnyUse(ctx *ctx.Ctx) error {
 	anyHandlerFunc := d.route.Middleware.GetAnyHandler()
+	count := len(anyHandlerFunc)
 	for index, val := range anyHandlerFunc {
-		val(ctx, func() { d.route.Middleware.ReduceAnyUse() })
+		val(ctx, func() { count-- })
 
-		if d.route.Middleware.GetAnyCount()+index+1 != len(anyHandlerFunc) {
-			d.route.Middleware.GoAnyUse()
+		if count+index+1 != len(anyHandlerFunc) {
 			return errors.New("")
-		}
-
-		if d.route.Middleware.GetAnyCount() <= 0 {
-			d.route.Middleware.GoAnyUse()
 		}
 	}
 
@@ -60,18 +56,15 @@ func (d *Dawn) emitGroupUse(rootURL string, ctx *ctx.Ctx) error {
 		return nil
 	}
 
+	count := len(groupHandlerFunc)
 	for index, val := range groupHandlerFunc {
-		val(ctx, func() { d.route.Middleware.ReduceGroupUse(rootURL) })
+		val(ctx, func() { count-- })
 
-		if d.route.Middleware.GetGroupCount(rootURL)+index+1 != len(groupHandlerFunc) {
-			d.route.Middleware.GoGroupUse(rootURL)
+		if count+index+1 != len(groupHandlerFunc) {
 			return errors.New("")
 		}
-
-		if d.route.Middleware.GetGroupCount(rootURL) <= 0 {
-			d.route.Middleware.GoGroupUse(rootURL)
-		}
 	}
+
 	return nil
 }
 
@@ -96,13 +89,14 @@ func Listen(addr string, app *Dawn) {
 			c.WriteString("NOT FOUND")
 			return
 		}
+		if query != nil {
+			c.SetQuery(query)
+		}
 
-		println("query", query)
 		// 执行中间件
 		if err := app.emitAnyUse(c); err != nil {
 			return
 		}
-
 		if err := app.emitGroupUse(rootURL, c); err != nil {
 			return
 		}
